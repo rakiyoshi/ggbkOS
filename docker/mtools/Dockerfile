@@ -2,7 +2,6 @@ FROM alpine:3.13.4
 MAINTAINER rakiyoshi
 
 RUN apk --no-cache add \
-    nasm \
     mtools
 
 RUN export UID=1000 GID=1000 &&\
