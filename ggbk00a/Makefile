@@ -27,7 +27,7 @@ asm:
 
 run:
 	$(MAKE) img
-	qemu-system-x86_64 -drive file=${IMAGE_PATH},format=raw -nographic
+	qemu-system-x86_64 -drive file=${IMAGE_PATH},format=raw,if=floppy -nographic
 
 clean:
 	-rm -f ipl.bin
