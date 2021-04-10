@@ -1,38 +1,55 @@
 WORKDIR=/work
 
+# File names
+IMAGE_NAME := ggbkos
+BOOTSECTOR_NAME := ipl
+
+# Containers
 NASM_CONTAINER := nasm
 MTOOLS_CONTAINER := mtools
 
+# Shell Commands
 NASM := docker run --rm -v ${PWD}:${WORKDIR} ${NASM_CONTAINER} nasm
 MFORMAT := docker run --rm -v ${PWD}:${WORKDIR} ${MTOOLS_CONTAINER} mformat
 MAKE := make -r
+RM := rm -f
+QEMU := qemu-system-x86_64
 
-IMAGE_PATH=helloos.img
 
-ipl.bin: ipl.nas Makefile
-	$(NASM) ${WORKDIR}/ipl.nas \
-		-o ${WORKDIR}/ipl.bin \
-		-l ${WORKDIR}/ipl.lst
+# Default
+default:
+	$(MAKE) img
 
-helloos.img: ipl.bin ipl.lst Makefile
-	$(MFORMAT) -f 1440 \
+# File generation
+$(BOOTSECTOR_NAME).bin: ipl.nas Makefile
+	$(NASM) \
+		${WORKDIR}/$(BOOTSECTOR_NAME).nas \
+		-o ${WORKDIR}/$(BOOTSECTOR_NAME).bin \
+		-l ${WORKDIR}/$(BOOTSECTOR_NAME).lst
+
+$(IMAGE_NAME).img: ipl.bin ipl.lst Makefile
+	$(MFORMAT) \
+		-f 1440 \
 		-C \
 		-l "HELLO-OS" \
-		-B ${WORKDIR}/ipl.bin \
-		-i ${WORKDIR}/helloos.img \
+		-B ${WORKDIR}/$(BOOTSECTOR_NAME).bin \
+		-i ${WORKDIR}/$(IMAGE_NAME).img \
 		::
 
-asm:
-	$(MAKE) -r ipl.bin
+# Commands
+asm: $(BOOTSECTOR_NAME).bin
 
-run:
-	$(MAKE) img
-	qemu-system-x86_64 -drive file=${IMAGE_PATH},format=raw,if=floppy -nographic
+img: $(IMAGE_NAME).img
+
+run: $(IMAGE_NAME).img
+	$(QEMU) \
+		-drive file=$(IMAGE_NAME).img,format=raw,if=floppy \
+		-nographic
 
 clean:
-	-rm -f ipl.bin
-	-rm -f ipl.lst
-	-rm -f helloos.img
+	-$(RM) $(BOOTSECTOR_NAME).bin
+	-$(RM) $(BOOTSECTOR_NAME).lst
 
-img:
-	$(MAKE) helloos.img
+src_only:
+	$(MAKE) clean
+	-$(RM) $(IMAGE_NAME)
