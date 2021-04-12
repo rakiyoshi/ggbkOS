@@ -1,11 +1,19 @@
 # ggbkOS
 [30日でできる！ OS自作入門](https://www.amazon.co.jp/dp/B00IR1HYI0) をやっていきます。
 
+## Requirements
+- qemu
+- wsl
+
 ## Cheat Sheet
+### Create image
+```
+make img
+```
+
 ### Run
-```bash
-IMAGE_PATH="helloos0/helloos.img"
-qemu-system-x86_64 -drive file=${IMAGE_PATH},format=raw -nographic
+```
+make run
 ```
 
 ### Stop
@@ -15,3 +23,7 @@ qemu-system-x86_64 -drive file=${IMAGE_PATH},format=raw -nographic
 ```bash
 cd ./dockerfiles && make build
 ```
+
+### VNC
+`.wslconfig` に `localhostForwarding=true` を追記。
+`localhost:5900` に VNC クライアントで接続
