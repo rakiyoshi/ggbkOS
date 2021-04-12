@@ -23,7 +23,7 @@ MFORMAT := docker run --rm -v $(PWD):$(WORKDIR) -w $(WORKDIR) $(MTOOLS_CONTAINER
 MCOPY 	:= docker run --rm -v $(PWD):$(WORKDIR) -w $(WORKDIR) $(MTOOLS_CONTAINER) mcopy
 MAKE 	:= make -r
 RM 		:= rm -f
-QEMU 	:= qemu-system-x86_64
+QEMU 	:= qemu-system-i386
 
 
 # Default
