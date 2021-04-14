@@ -1,20 +1,24 @@
 WORKDIR=/work
 
-OS_NAME := gogobikeos
-ASMHEAD := asmhead
-IPL := ipl10
+OS_NAME	:= gogobikeos
+ASMHEAD	:= asmhead
+IPL		:= ipl10
 
 # File names
 IMG := $(OS_NAME).img
 
 # Containers
-NASM_CONTAINER := nasm
-MTOOLS_CONTAINER := mtools
+DOCKER		:= docker
+DOCKERFLAGS	:= --rm -v $(PWD):$(WORKDIR) -w $(WORKDIR)
+NASM_CONTAINER		:= nasm
+MTOOLS_CONTAINER	:= mtools
+GCC_CONTAINER		:= gcc:10.3.0
 
 # Shell Commands
-NASM	:= docker run --rm -v $(PWD):$(WORKDIR) -w $(WORKDIR) $(NASM_CONTAINER) nasm
-MFORMAT := docker run --rm -v $(PWD):$(WORKDIR) -w $(WORKDIR) $(MTOOLS_CONTAINER) mformat
-MCOPY 	:= docker run --rm -v $(PWD):$(WORKDIR) -w $(WORKDIR) $(MTOOLS_CONTAINER) mcopy
+NASM	:= $(DOCKER) run $(DOCKERFLAGS) $(NASM_CONTAINER) nasm
+MFORMAT := $(DOCKER) run $(DOCKERFLAGS) $(MTOOLS_CONTAINER) mformat
+MCOPY 	:= $(DOCKER) run $(DOCKERFLAGS) $(MTOOLS_CONTAINER) mcopy
+GCC 	:= $(DOCKER) run $(DOCKERFLAGS) $(GCC_CONTAINER) gcc
 MAKE 	:= make -r
 RM 		:= rm -f
 QEMU 	:= qemu-system-i386
@@ -38,7 +42,7 @@ $(ASMHEAD).sys: $(ASMHEAD).nas Makefile
 		-o $@ \
 		-l $(ASMHEAD).lst
 
-$(IMG): $(IPL).bin $(IPL).lst $(ASMHEAD).sys $(ASMHEAD).lst Makefile
+$(OS_NAME).img: $(IPL).bin $(ASMHEAD).sys Makefile
 	$(MFORMAT) \
 		-f 1440 \
 		-C \
@@ -47,18 +51,18 @@ $(IMG): $(IPL).bin $(IPL).lst $(ASMHEAD).sys $(ASMHEAD).lst Makefile
 		-i $@ \
 		"::"
 	$(MCOPY) \
-		-i $(IMG) \
+		-i $@ \
 		$(ASMHEAD).sys ::
 
 
 # Commands
 asm: $(IPL).bin
 
-img: $(IMG)
+img: $(OS_NAME).img
 
-run: $(IMG)
+run: $(OS_NAME).img
 	$(QEMU) \
-		-drive file=$(IMG),format=raw,if=floppy \
+		-drive file=$<,format=raw,if=floppy \
 		-vnc :0
 
 clean:
