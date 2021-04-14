@@ -48,14 +48,12 @@ VRAM    EQU     0x0ff8          ; グラッフィクバッファの開始番地
         CALL    waitkbdout
         MOV     AL,0xd1
         OUT     0x64,AL
-        CALL    waitkgbdout
+        CALL    waitkbdout
         MOV     AL,0xdf         ; enable A20
         OUT     0x60,AL
         CALL    waitkbdout
 
 ; プロテクトモード移行
-
-[INSTRSET "i486p"]              ; 486 の命令まで使いたいという記述
 
         LGDT    [GDTR0]         ; 暫定 GDT を設定
         MOV     EAX,CR0
@@ -85,7 +83,7 @@ pipelineflash:
 
         MOV     ESI,0x7c00      ; 転送元
         MOV     EDI,DSKCAC      ; 転送先
-        MVO     ECX,512/4
+        MOV     ECX,512/4
         CALL    memcpy
 
 ; 残りを転送
@@ -93,7 +91,7 @@ pipelineflash:
         MOV     ESI,DSKCAC0+512 ; 転送元
         MOV     EDI,DSKCAC+512  ; 転送先
         MOV     ECX,0
-        MOV     CL,BYTE [CYlS]
+        MOV     CL,BYTE [CYLS]
         IMUL    ECX,512*18*2/4  ; シリンダの数からバイト数/4 に変換
         SUB     ECX,512/4       ; IPL の分だけ差し引く
         CALL    memcpy
@@ -107,7 +105,7 @@ pipelineflash:
         MOV     ECX,[EBX+16]
         ADD     ECX,3           ; ECX += 3
         SHR     ECX,2           ; ECX /= 4
-        JZ      skipp           ; 転送するべきものがないとき skip へ
+        JZ      skip           ; 転送するべきものがないとき skip へ
         MOV     ESI,[EBX+20]    ; 転送元
         ADD     ESI,EBX
         MOV     EDI,[EBX+12]    ; 転送先
@@ -133,9 +131,9 @@ memcpy:
         RET
 ; memcpy はアドレスサイズプリフィクスを入れ忘れなければ、ストリング命令でもかける
 
-        ALIGNB  16
+        ALIGNB  16, DB 0
 GDT0:
-        RESB    8               ; null selector
+        TIMES   8 DB 0          ; null selector
         DW      0xffff,0x0000,0x9200,0x00cf ; 読み書き可能セグメント 32bit
         DW      0xffff,0x0000,0x9a28,0x0047 ; 実行可能セグメント 32bit (bootpack 用)
 
@@ -144,5 +142,5 @@ GDTR0:
         DW      8*3-1
         DD      GDT0
 
-        ALIGNB  16
+        ALIGNB  16, DB 0
 bootpack:
