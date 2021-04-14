@@ -1,18 +1,11 @@
 WORKDIR=/work
 
-OS_NAME := ggbkos
-ASMHEAD_NAME := asmhead
-BOOTSECTOR_NAME := ipl
+OS_NAME := gogobikeos
+ASMHEAD := asmhead
+IPL := ipl10
 
 # File names
 IMG := $(OS_NAME).img
-IMG_SRC  := $(OS_NAME).nas
-ASMHEAD_FILE := $(ASMHEAD_NAME).sys
-ASMHEAD_SRC  := $(ASMHEAD_NAME).nas
-ASMHEAD_LST  := $(ASMHEAD_NAME).lst
-BOOTSECTOR_SRC := $(BOOTSECTOR_NAME).nas
-BOOTSECTOR_BIN := $(BOOTSECTOR_NAME).bin
-BOOTSECTOR_LST := $(BOOTSECTOR_NAME).lst
 
 # Containers
 NASM_CONTAINER := nasm
@@ -33,33 +26,33 @@ default:
 
 
 # File generation
-$(BOOTSECTOR_BIN): $(BOOTSECTOR_SRC) Makefile
+$(IPL).bin: $(IPL).nas Makefile
 	$(NASM) \
 		$< \
 		-o $@ \
-		-l $(BOOTSECTOR_LST)
+		-l $(IPL).lst
 
-$(IMG): $(BOOTSECTOR_BIN) $(BOOTSECTOR_LST) $(ASMHEAD_FILE) $(ASMHEAD_LST) Makefile
+$(ASMHEAD).sys: $(ASMHEAD).nas Makefile
+	$(NASM) \
+		$< \
+		-o $@ \
+		-l $(ASMHEAD).lst
+
+$(IMG): $(IPL).bin $(IPL).lst $(ASMHEAD).sys $(ASMHEAD).lst Makefile
 	$(MFORMAT) \
 		-f 1440 \
 		-C \
-		-l "HELLO-OS" \
+		-l "GOGOBIKEOS" \
 		-B $< \
 		-i $@ \
 		"::"
 	$(MCOPY) \
 		-i $(IMG) \
-		$(ASMHEAD_FILE) ::
-
-$(ASMHEAD_FILE): $(ASMHEAD_SRC) Makefile
-	$(NASM) \
-		$< \
-		-o $@ \
-		-l $(ASMHEAD_LST)
+		$(ASMHEAD).sys ::
 
 
 # Commands
-asm: $(BOOTSECTOR_BIN)
+asm: $(IPL).bin
 
 img: $(IMG)
 
