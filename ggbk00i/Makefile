@@ -1,8 +1,9 @@
 WORKDIR=/work
 
-OS_NAME	:= gogobikeos
-ASMHEAD	:= asmhead
-IPL		:= ipl10
+OS_NAME		:= gogobikeos
+ASMHEAD		:= asmhead
+IPL			:= ipl10
+BOOTPACK	:= bootpack
 
 # File names
 IMG := $(OS_NAME).img
@@ -12,7 +13,7 @@ DOCKER		:= docker
 DOCKERFLAGS	:= --rm -v $(PWD):$(WORKDIR) -w $(WORKDIR)
 NASM_CONTAINER		:= nasm
 MTOOLS_CONTAINER	:= mtools
-GCC_CONTAINER		:= gcc:10.3.0
+GCC_CONTAINER		:= gcc
 
 # Shell Commands
 NASM	:= $(DOCKER) run $(DOCKERFLAGS) $(NASM_CONTAINER) nasm
@@ -42,7 +43,19 @@ $(ASMHEAD).sys: $(ASMHEAD).nas Makefile
 		-o $@ \
 		-l $(ASMHEAD).lst
 
-$(OS_NAME).img: $(IPL).bin $(ASMHEAD).sys Makefile
+$(BOOTPACK).hrb: bootpack.c har.ld Makefile
+	$(GCC) \
+		-march=i486 \
+		-m32 \
+		-nostdlib \
+		-T har.ld \
+		$< \
+		-o $@
+
+$(OS_NAME).sys: asmhead.sys bootpack.hrb
+	cat $^ > $@
+
+$(OS_NAME).img: $(IPL).bin $(OS_NAME).sys Makefile
 	$(MFORMAT) \
 		-f 1440 \
 		-C \
@@ -52,7 +65,7 @@ $(OS_NAME).img: $(IPL).bin $(ASMHEAD).sys Makefile
 		"::"
 	$(MCOPY) \
 		-i $@ \
-		$(ASMHEAD).sys ::
+		$(OS_NAME).sys ::
 
 
 # Commands
@@ -70,3 +83,4 @@ clean:
 	-$(RM) *.lst
 	-$(RM) *.sys
 	-$(RM) *.img
+	-$(RM) *.hrb
