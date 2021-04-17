@@ -60,6 +60,7 @@ $(BOOTPACK).hrb: $(BOOTPACK).c $(LINKER).ld $(NASMFUNC).o Makefile	# コンパ�
 		-T $(LINKER).ld \
 		-g $(BOOTPACK).c $(NASMFUNC).o \
 		-o $@
+	chmod -x $@
 
 $(OS_NAME).sys: $(ASMHEAD).bin $(BOOTPACK).hrb
 	cat $^ > $@
