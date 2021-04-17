@@ -4,6 +4,8 @@ OS_NAME		:= gogobikeos
 ASMHEAD		:= asmhead
 IPL			:= ipl10
 BOOTPACK	:= bootpack
+NASMFUNC	:= nasmfunc
+LINKER		:= har
 
 # File names
 IMG := $(OS_NAME).img
@@ -31,28 +33,35 @@ default:
 
 
 # File generation
-$(IPL).bin: $(IPL).nas Makefile
+$(IPL).bin: $(IPL).asm Makefile
 	$(NASM) \
 		$< \
 		-o $@ \
 		-l $(IPL).lst
 
-$(ASMHEAD).sys: $(ASMHEAD).nas Makefile
+$(ASMHEAD).bin: $(ASMHEAD).asm Makefile
 	$(NASM) \
 		$< \
 		-o $@ \
 		-l $(ASMHEAD).lst
 
-$(BOOTPACK).hrb: bootpack.c har.ld Makefile
+$(NASMFUNC).o: $(NASMFUNC).asm Makefile
+	$(NASM) \
+		-g \
+		-f elf \
+		$< \
+		-o $@
+
+$(BOOTPACK).hrb: $(BOOTPACK).c $(LINKER).ld $(NASMFUNC).o Makefile	# コンパイル/リンク
 	$(GCC) \
 		-march=i486 \
 		-m32 \
 		-nostdlib \
-		-T har.ld \
-		$< \
+		-T $(LINKER).ld \
+		-g $(BOOTPACK).c $(NASMFUNC).o \
 		-o $@
 
-$(OS_NAME).sys: asmhead.sys bootpack.hrb
+$(OS_NAME).sys: $(ASMHEAD).bin $(BOOTPACK).hrb
 	cat $^ > $@
 
 $(OS_NAME).img: $(IPL).bin $(OS_NAME).sys Makefile
@@ -69,8 +78,6 @@ $(OS_NAME).img: $(IPL).bin $(OS_NAME).sys Makefile
 
 
 # Commands
-asm: $(IPL).bin
-
 img: $(OS_NAME).img
 
 run: $(OS_NAME).img
@@ -84,3 +91,4 @@ clean:
 	-$(RM) *.sys
 	-$(RM) *.img
 	-$(RM) *.hrb
+	-$(RM) *.o
