@@ -12,5 +12,5 @@ build: $(TARGETS)
 		| jq -r '.[].RepoTags[]' > $@
 
 clean: $(TARGETS)
-	cat $^ | xargs -I {} docker rmi -f {}
-	rm -f $^
+	-cat $^ | xargs -I {} docker rmi -f {}
+	-rm -f $^
