@@ -47,18 +47,17 @@ $(ASMHEAD).bin: $(ASMHEAD).asm Makefile
 
 $(NASMFUNC).o: $(NASMFUNC).asm Makefile
 	$(NASM) \
-		-g \
 		-f elf \
 		$< \
-		-o $@
+		-o $@ \
+		-l $(NASMFUNC).lst
 
 $(BOOTPACK).hrb: $(BOOTPACK).c $(LINKER).ld $(NASMFUNC).o Makefile	# コンパイル/リンク
 	$(GCC) \
 		-march=i486 \
 		-m32 \
 		-nostdlib \
-		-T $(LINKER).ld \
-		-g $(BOOTPACK).c $(NASMFUNC).o \
+		-T $(LINKER).ld $(BOOTPACK).c $(NASMFUNC).o \
 		-o $@
 	chmod -x $@
 
@@ -72,7 +71,7 @@ $(OS_NAME).img: $(IPL).bin $(OS_NAME).sys Makefile
 		-l "GOGOBIKEOS" \
 		-B $< \
 		-i $@ \
-		"::"
+		::
 	$(MCOPY) \
 		-i $@ \
 		$(OS_NAME).sys ::

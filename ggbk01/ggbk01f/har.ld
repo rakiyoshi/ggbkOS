@@ -15,11 +15,9 @@ SECTIONS
         LONG(0)                 /* 32: heap 領域 (malloc 領域) 開始アドレス */
     }
 
-    .text : {
-        *(.text)
-    }
+    .text : { *(.text) }
 
-    .data 0x31000 : AT ( ADDR(.text) + SIZEOF(.text) ) {
+    .data 0x310000 : AT ( ADDR(.text) + SIZEOF(.text) ) {
         *(.data)
         *(.rodata*)
         *(.bss)

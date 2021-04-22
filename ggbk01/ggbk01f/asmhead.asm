@@ -149,7 +149,6 @@ skip:
 waitkbdout:
         IN      AL,0x64
         AND     AL,0x02
-        ;IN      AL,0x60         ; から読み(受信バッファが悪さをしないように)
         JNZ     waitkbdout      ; AND の結果が0でなければ waitkbdout へ
         RET
 

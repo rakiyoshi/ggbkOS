@@ -1,23 +1,22 @@
 /* 他のファイルで作った関数があることをCコンパイラに伝える */
-void io_hlt(void);
-void io_cli(void);
-void io_out8(int port, int data);
-int io_load_eflags(void);
-void io_store_eflags(int eflags);
+extern void io_hlt(void);
+extern void io_cli(void);
+extern void io_out8(int port, int data);
+extern int io_load_eflags(void);
+extern void io_store_eflags(int eflags);
 
 void init_palette(void);
 void set_palette(int start, int end, unsigned char *rgb);
 
 void HariMain(void)
 {
-    unsigned long int i;
     char *p;
 
     init_palette(); // パレットを設定
 
     p = (char *) 0xa0000;
 
-    for (i = 0; i <= 0xffff; i++) {
+    for (int i = 0; i <= 0xffff; i++) {
         p[i] = i & 0x0f;
     }
 
@@ -28,7 +27,7 @@ void HariMain(void)
 
 void init_palette(void)
 {
-    static unsigned char table_rgb[16 * 3] = {
+    unsigned char table_rgb[16*3] = {
         0x00, 0x00, 0x00, //  0: 黒
         0xff, 0x00, 0x00, //  1: 明るい赤
         0x00, 0xff, 0x00, //  2: 明るい緑
@@ -44,7 +43,7 @@ void init_palette(void)
         0x00, 0x00, 0x84, // 12: 暗い青
         0x84, 0x00, 0x84, // 13: 暗い紫
         0x00, 0x84, 0x84, // 14: 暗い水色
-        0x84, 0x84, 0x84, // 15: 暗い灰色
+        0x84, 0x84, 0x84  // 15: 暗い灰色
     };
     set_palette(0, 15, table_rgb);
     return;
