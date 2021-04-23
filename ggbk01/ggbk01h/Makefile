@@ -52,12 +52,19 @@ $(NASMFUNC).o: $(NASMFUNC).asm Makefile
 		-o $@ \
 		-l $(NASMFUNC).lst
 
-$(BOOTPACK).hrb: $(BOOTPACK).c $(LINKER).ld $(NASMFUNC).o Makefile	# コンパイル/リンク
+# コンパイル/リンク
+#   gcc:
+#     -march:    システムプロセッサアーキテクチャを指定
+#     -m32:	     IA-32 アーキテクチャ向けにコンパイル
+#     -nostdlib: 指定されたライブラリだけがリンカに渡される
+#     -T:        リンカスクリプトを指定
+$(BOOTPACK).hrb: $(BOOTPACK).c $(LINKER).ld $(NASMFUNC).o Makefile
 	$(GCC) \
 		-march=i486 \
 		-m32 \
 		-nostdlib \
-		-T $(LINKER).ld $(BOOTPACK).c $(NASMFUNC).o \
+		-T $(LINKER).ld \
+		$(BOOTPACK).c $(NASMFUNC).o \
 		-o $@
 	chmod -x $@
 
