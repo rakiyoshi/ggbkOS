@@ -4,7 +4,7 @@ TARGETS := $(addsuffix .build, $(DIRS))
 
 build: $(TARGETS)
 
-%.build:
+%.build: %/Dockerfile Makefile
 	$(DOCKER) build \
 		-t $(@D) \
 		$(@D)
