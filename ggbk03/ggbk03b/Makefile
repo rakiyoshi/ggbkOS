@@ -9,8 +9,7 @@ LINKER		:= har
 FONT		:= hankaku
 FONTCONVERTER	:= hankaku_conv
 
-# File names
-IMG := $(OS_NAME).img
+OBJS_BOOTPACK := $(BOOTPACK).o graphic.o $(FONT).o dsctbl.o mysprintf.o nasmfunc.o
 
 # Containers
 DOCKER		:= docker
@@ -65,17 +64,30 @@ $(FONT).c: $(FONTCONVERTER).rb $(FONT).txt Makefile
 
 # コンパイル/リンク
 #   gcc:
+#     -c:		 リンカを起動しない
 #     -march:    システムプロセッサアーキテクチャを指定
 #     -m32:	     IA-32 アーキテクチャ向けにコンパイル
 #     -nostdlib: 指定されたライブラリだけがリンカに渡される
 #     -T:        リンカスクリプトを指定
-$(BOOTPACK).hrb: $(BOOTPACK).c $(LINKER).ld $(FONT).c graphic.c dsctbl.c mysprintf.c $(NASMFUNC).o Makefile
+
+# コンパイル
+%.o: %.c Makefile
+	$(GCC) \
+		-c \
+		-march=i486 \
+		-m32 \
+		$*.c \
+		-o $@
+	chmod -x $@
+
+# リンク
+$(BOOTPACK).hrb: $(OBJS_BOOTPACK) $(LINKER).ld Makefile
 	$(GCC) \
 		-march=i486 \
 		-m32 \
 		-nostdlib \
 		-T $(LINKER).ld \
-		$(BOOTPACK).c $(FONT).c mysprintf.c graphic.c dsctbl.c $(NASMFUNC).o \
+		$(OBJS_BOOTPACK) \
 		-o $@
 	chmod -x $@
 
@@ -108,6 +120,6 @@ clean:
 	-$(RM) *.lst
 	-$(RM) *.sys
 	-$(RM) *.img
-	-$(RM) *.hrb
 	-$(RM) *.o
+	-$(RM) *.hrb
 	-$(RM) hankaku.c
