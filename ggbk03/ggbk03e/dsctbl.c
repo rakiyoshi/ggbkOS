@@ -2,6 +2,7 @@
  * GDT や IDT などの、 descriptor table 関係
  */
 
+#include <stdint.h>
 #include "bootpack.h"
 
 void init_gdtidt(void)
@@ -23,6 +24,10 @@ void init_gdtidt(void)
         set_gatedesc(idt + i, 0, 0, 0);
     }
     load_idtr(LIMIT_IDT, ADR_IDT);
+
+    // Configure IDT
+    set_gatedesc(idt + 0x21, (int) (intptr_t) asm_inthandler21, 2 << 3, AR_INTGATE32);
+    set_gatedesc(idt + 0x2c, (int) (intptr_t) asm_inthandler2c, 2 << 3, AR_INTGATE32);
 
     return;
 }

@@ -8,6 +8,7 @@ void HariMain(void)
 
     init_gdtidt();
     init_pic();
+    io_sti();
 
     init_palette();
     init_screen8(binfo->vram, binfo->scrnx, binfo->scrny);
@@ -24,6 +25,9 @@ void HariMain(void)
     putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
     mysprintf(s, "scrnx = %d", binfo->scrnx);
     putfonts8_asc(binfo->vram, binfo->scrnx, 16, 64, COL8_FFFFFF, s);
+
+    io_out8(PIC0_IMR, 0xf9);    // PIC1 とキーボードを許可 (11111001)
+    io_out8(PIC1_IMR, 0xef);    // マウスを許可 (11101111)
 
     for (;;) {
         io_hlt();
