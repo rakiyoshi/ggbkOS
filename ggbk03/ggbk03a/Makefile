@@ -69,13 +69,13 @@ $(FONT).c: $(FONTCONVERTER).rb $(FONT).txt Makefile
 #     -m32:	     IA-32 アーキテクチャ向けにコンパイル
 #     -nostdlib: 指定されたライブラリだけがリンカに渡される
 #     -T:        リンカスクリプトを指定
-$(BOOTPACK).hrb: $(BOOTPACK).c $(LINKER).ld $(FONT).c mysprintf.c $(NASMFUNC).o Makefile
+$(BOOTPACK).hrb: $(BOOTPACK).c $(LINKER).ld $(FONT).c graphic.c dsctbl.c mysprintf.c $(NASMFUNC).o Makefile
 	$(GCC) \
 		-march=i486 \
 		-m32 \
 		-nostdlib \
 		-T $(LINKER).ld \
-		$(BOOTPACK).c $(FONT).c mysprintf.c $(NASMFUNC).o\
+		$(BOOTPACK).c $(FONT).c mysprintf.c graphic.c dsctbl.c $(NASMFUNC).o \
 		-o $@
 	chmod -x $@
 
