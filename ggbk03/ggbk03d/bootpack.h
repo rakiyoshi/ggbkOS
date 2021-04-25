@@ -1,9 +1,12 @@
 /*
  * asmhead.nas
  */
-struct BOOTINFO {
-    char cyls, leds, vmode, reserve;
-    short scrnx, scrny;
+struct BOOTINFO {   // 0x0ff0-0x0fff
+    char cyls;      // ブートセクタはどこまでディスクを読んだのか
+    char leds;      // ブート時のキーボードのLEDの状態
+    char vmode;     // ビデオモード 何ビットカラー化
+    char reserve;
+    short scrnx, scrny; // 画面解像度
     unsigned char *vram;
 };
 #define ADR_BOOTINFO 0x00000ff0
@@ -78,3 +81,20 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
  * mysprintf.c
  */
 void mysprintf(char *str, char *fmt, ...);
+
+/*
+ * int.c
+ */
+void init_pic(void);
+#define PIC0_ICW1       0x0020
+#define PIC0_OCW2       0x0020
+#define PIC0_IMR        0x0021
+#define PIC0_ICW2       0x0021
+#define PIC0_ICW3       0x0021
+#define PIC0_ICW4       0x0021
+#define PIC1_ICW1       0x00a0
+#define PIC1_OCW2       0x00a0
+#define PIC1_IMR        0x00a1
+#define PIC1_ICW2       0x00a1
+#define PIC1_ICW3       0x00a1
+#define PIC1_ICW4       0x00a1

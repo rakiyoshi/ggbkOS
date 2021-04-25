@@ -6,12 +6,18 @@ void HariMain(void)
     char s[40], mcursor[256];
     int mx, my;
 
+    init_gdtidt();
+    init_pic();
+
     init_palette();
     init_screen8(binfo->vram, binfo->scrnx, binfo->scrny);
+
+    // 文字描画
     putfonts8_asc(binfo->vram, binfo->scrnx,  8,  8, COL8_FFFFFF, "Fuck You.");
     putfonts8_asc(binfo->vram, binfo->scrnx, 31, 31, COL8_000000, "GOGOBIKE OS.");
     putfonts8_asc(binfo->vram, binfo->scrnx, 30, 30, COL8_FFFFFF, "GOGOBIKE OS.");
 
+    // マウスカーソル描画
     mx = (binfo->scrnx - 16) / 2;
     my = (binfo->scrny - 28 - 16) / 2;
     init_mouse_cursor8(mcursor, COL8_008484);

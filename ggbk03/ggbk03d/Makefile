@@ -9,7 +9,8 @@ LINKER		:= har
 FONT		:= hankaku
 FONTCONVERTER	:= hankaku_conv
 
-OBJS_BOOTPACK := $(BOOTPACK).o graphic.o $(FONT).o dsctbl.o mysprintf.o nasmfunc.o
+OBJS_BOOTPACK := $(BOOTPACK).o $(FONT).o nasmfunc.o \
+				graphic.o dsctbl.o mysprintf.o int.o
 
 # Containers
 DOCKER		:= docker
