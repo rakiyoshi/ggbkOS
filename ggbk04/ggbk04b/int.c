@@ -5,6 +5,7 @@
 #include "bootpack.h"
 
 #define PORT_KEYDAT     0x0060
+struct KEYBUF keybuf;
 
 void init_pic(void)
 {
@@ -32,15 +33,13 @@ void init_pic(void)
  */
 void inthandler21(int *esp)
 {
-    struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
-    char data, s[4];
+    unsigned char data;
     io_out8(PIC0_OCW2, 0x61); // IRQ-01 受付完了を PIC に通知
     data = io_in8(PORT_KEYDAT);
-
-    mysprintf(s, "%02X", data);
-    boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
-    putfonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
-
+    if (keybuf.flag == 0) {
+        keybuf.data = data;
+        keybuf.flag = 1;
+    }
     return;
 }
 

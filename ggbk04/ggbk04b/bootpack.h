@@ -17,6 +17,7 @@ struct BOOTINFO {   // 0x0ff0-0x0fff
 void io_hlt(void);
 void io_cli(void);
 void io_sti(void);
+void io_stihlt(void);
 void io_out8(int port, int data);
 int io_in8(int port);
 int io_load_eflags(void);
@@ -91,6 +92,9 @@ void mysprintf(char *str, char *fmt, ...);
 /*
  * int.c
  */
+struct KEYBUF {
+    unsigned char data, flag;
+};
 void init_pic(void);
 void inthandler21(int *esp);
 void inthandler2c(int *esp);
