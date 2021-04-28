@@ -10,7 +10,7 @@ FONT		:= hankaku
 FONTCONVERTER	:= hankaku_conv
 
 OBJS_BOOTPACK := $(BOOTPACK).o $(FONT).o nasmfunc.o \
-				graphic.o dsctbl.o mysprintf.o int.o
+				graphic.o dsctbl.o mysprintf.o int.o fifo.o
 
 # Containers
 DOCKER		:= docker

@@ -28,6 +28,18 @@ void asm_inthandler21(void);
 void asm_inthandler2c(void);
 
 /*
+ * fifo.c
+ */
+struct FIFO8 {
+    unsigned char *buf;
+    int p, q, size, free, flags;
+};
+void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf);
+int fifo8_put(struct FIFO8 *fifo, unsigned char data);
+int fifo8_get(struct FIFO8  *fifo);
+int fifo8_status(struct FIFO8 *fifo);
+
+/*
  * graphic.c
  */
 void init_palette(void);
@@ -92,10 +104,6 @@ void mysprintf(char *str, char *fmt, ...);
 /*
  * int.c
  */
-struct KEYBUF {
-    unsigned char data[32];
-    int next_r, next_w, len;
-};
 void init_pic(void);
 void inthandler21(int *esp);
 void inthandler2c(int *esp);
