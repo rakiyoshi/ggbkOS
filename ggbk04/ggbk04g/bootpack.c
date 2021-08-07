@@ -1,6 +1,6 @@
 #include "bootpack.h"
 
-extern struct FIFO8 keyfifo;
+extern struct FIFO8 keyfifo, mousefifo;
 void enable_mouse(void);
 void init_keyboard(void);
 
@@ -8,7 +8,7 @@ void HariMain(void)
 {
     struct BOOTINFO *binfo = (struct BOOTINFO *) 0x0ff0;
     char s[40], mcursor[256];
-    unsigned char keybuf[32];
+    unsigned char keybuf[32], mousebuf[128];
     int mx, my, i;
 
     init_gdtidt();
@@ -16,6 +16,7 @@ void HariMain(void)
     io_sti();
 
     fifo8_init(&keyfifo, 32, keybuf);
+    fifo8_init(&mousefifo, 128, mousebuf);
     io_out8(PIC0_IMR, 0xf9);    // PIC1 とキーボードを許可 (11111001)
     io_out8(PIC1_IMR, 0xef);    // マウスを許可 (11101111)
 
@@ -41,14 +42,20 @@ void HariMain(void)
 
     for (;;) {
         io_cli();
-        if (fifo8_status(&keyfifo) == 0) {
+        if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) == 0) {
             io_stihlt();
-        } else {
+        } else if (fifo8_status(&keyfifo) != 0) {
             i = fifo8_get(&keyfifo);
             io_sti();
             mysprintf(s, "%02X", i);
             boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
             putfonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
+        } else if (fifo8_status(&mousefifo) != 0) {
+            i = fifo8_get(&mousefifo);
+            io_sti();
+            mysprintf(s, "%02X", i);
+            boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 47, 31);
+            putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
         }
     }
 }
