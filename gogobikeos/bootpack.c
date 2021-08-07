@@ -8,7 +8,7 @@ void HariMain(void)
 {
     struct BOOTINFO *binfo = (struct BOOTINFO *) 0x0ff0;
     char s[40], mcursor[256];
-    unsigned char keybuf[32], mousebuf[128];
+    unsigned char keybuf[32], mousebuf[128], mouse_dbuf[3], mouse_phase;
     int mx, my, i;
 
     init_gdtidt();
@@ -39,6 +39,7 @@ void HariMain(void)
     putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
 
     enable_mouse();
+    mouse_phase = 0; // マウスの 0xfa を待っている段階へ
 
     for (;;) {
         io_cli();
@@ -53,9 +54,29 @@ void HariMain(void)
         } else if (fifo8_status(&mousefifo) != 0) {
             i = fifo8_get(&mousefifo);
             io_sti();
-            mysprintf(s, "%02X", i);
-            boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 47, 31);
-            putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
+            switch (mouse_phase) {
+                case 0: // マウスの 0xfa を待っている段階
+                    if (i == 0xfa) {
+                        mouse_phase = 1;
+                    }
+                    break;
+                case 1: // マウスの1バイト目を待っている段階
+                    mouse_dbuf[0] = i;
+                    mouse_phase++;
+                    break;
+                case 2: // マウスの2バイト目を待っている段階
+                    mouse_dbuf[1] = i;
+                    mouse_phase++;
+                    break;
+                case 3: // マウスの3バイト目を待っている段階
+                    mouse_dbuf[2] = i;
+                    mouse_phase = 1;
+                    // データが3バイト揃ったので表示
+                    mysprintf(s, "%02X %02X %02X", mouse_dbuf[0], mouse_dbuf[1], mouse_dbuf[2]);
+                    boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 32+8*8-1, 31);
+                    putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
+                    break;
+            }
         }
     }
 }
