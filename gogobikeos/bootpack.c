@@ -72,7 +72,7 @@ void HariMain(void)
                 if ((mdec.btn & 0x4) != 0) {
                     s[2] = 'C';
                 }
-                boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 32+8*8-1, 31);
+                boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 32+15*8-1, 31);
                 putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
             }
         }
