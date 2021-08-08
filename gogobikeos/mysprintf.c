@@ -13,6 +13,12 @@ int dec2asc(char *str, int dec, struct Padding padding)
 {
     int len = 0, len_buf;
     int buf[10];
+    int sign = 0;
+    if (dec < 0) {
+        sign = 1;
+        len++;
+        dec = -dec;
+    }
     while (1) {
         buf[len++] = dec % 10;
         if (dec < 10) break;
@@ -27,6 +33,9 @@ int dec2asc(char *str, int dec, struct Padding padding)
             *(str++) = padding.str;
             padding.length--;
         }
+    }
+    if (sign == 1) {
+        *(str++) = '-';
     }
     while (len) {
         *(str++) = buf[--len] + 0x30;
