@@ -114,7 +114,12 @@ void mysprintf(char *str, char *fmt, ...)
     while (*fmt) {
         if (*fmt=='%') {
             fmt++;
-            if (*fmt != 'd' && *fmt != 'D' && *fmt != 'x') {
+            if (*(fmt+1) == 'd' || *(fmt+1) == 'D' || *(fmt+1) == 'x') {
+                // パディング
+                // 02x の場合、 0 がパディング文字、2が出力文字列長
+                padding.str = ' ';
+                padding.length = *(fmt++) - 0x30;
+            } else if (*(fmt+2) == 'd' || *(fmt+2) == 'D' || *(fmt+2) == 'x') {
                 // パディング
                 // 02x の場合、 0 がパディング文字、2が出力文字列長
                 padding.str = *(fmt++);
