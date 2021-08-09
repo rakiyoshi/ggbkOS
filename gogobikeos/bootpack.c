@@ -1,7 +1,13 @@
 #include "bootpack.h"
 
+struct MOUSE_DEC {
+    unsigned char buf[3], phase;
+    int x, y, btn;
+};
+
 extern struct FIFO8 keyfifo, mousefifo;
-void enable_mouse(void);
+void enable_mouse(struct MOUSE_DEC *mdec);
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 void init_keyboard(void);
 
 void HariMain(void)
@@ -10,6 +16,7 @@ void HariMain(void)
     char s[40], mcursor[256];
     unsigned char keybuf[32], mousebuf[128];
     int mx, my, i;
+    struct MOUSE_DEC mdec;
 
     init_gdtidt();
     init_pic();
@@ -38,7 +45,7 @@ void HariMain(void)
     mysprintf(s, "(%d, %d)", mx, my);
     putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
 
-    enable_mouse();
+    enable_mouse(&mdec);
 
     for (;;) {
         io_cli();
@@ -53,9 +60,41 @@ void HariMain(void)
         } else if (fifo8_status(&mousefifo) != 0) {
             i = fifo8_get(&mousefifo);
             io_sti();
-            mysprintf(s, "%02X", i);
-            boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 47, 31);
-            putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
+            if (mouse_decode(&mdec, i) != 0) {
+                // データが3バイト揃ったので表示
+                mysprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
+                if ((mdec.btn & 0x1) != 0) {
+                    s[1] = 'L';
+                }
+                if ((mdec.btn & 0x2) != 0) {
+                    s[3] = 'R';
+                }
+                if ((mdec.btn & 0x4) != 0) {
+                    s[2] = 'C';
+                }
+                boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 32+15*8-1, 31);
+                putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
+                // マウスカーソルの移動
+                boxfill8(binfo->vram, binfo->scrnx, COL8_008484, mx, my, mx+15, my+15); // マウスを消す
+                mx += mdec.x;
+                my += mdec.y;
+                if (mx < 0) {
+                    mx = 0;
+                }
+                if (my < 0) {
+                    my = 0;
+                }
+                if (mx > binfo->scrnx - 16) {
+                    mx = binfo->scrnx - 16;
+                }
+                if (my > binfo->scrny - 16) {
+                    my = binfo->scrny - 16;
+                }
+                mysprintf(s, "(%3d, %3d)", mx, my);
+                boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 0, 79, 15);  // 座標を消す
+                putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s); // 座標を書く
+                putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);    // マウスを描く
+            }
         }
     }
 }
@@ -100,11 +139,49 @@ void init_keyboard(void)
 /*
  * マウスの有効化
  */
-void enable_mouse(void)
+void enable_mouse(struct MOUSE_DEC *mdec)
 {
     wait_KBC_sendready();
     io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
     wait_KBC_sendready();
-    io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
-    return; // 成功すると ACK(0xfa) が送信される
+    io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);  // 成功すると ACK(0xfa) が送信される
+    mdec->phase = 0;    // マウスの 0xfa を待っている段階
+    return;
+}
+
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat)
+{
+    switch (mdec->phase) {
+        case 0: // マウスの 0xfa を待っている段階
+            if (dat == 0xfa) {
+                mdec->phase = 1;
+            }
+            return 0;
+        case 1: // マウスの1バイト目を待っている段階
+            if ((dat & 0xc8) == 0x08) { // 正しい1バイト目だった場合
+                mdec->buf[0] = dat;
+                mdec->phase++;
+            }
+            return 0;
+        case 2: // マウスの2バイト目を待っている段階
+            mdec->buf[1] = dat;
+            mdec->phase++;
+            return 0;
+        case 3: // マウスの3バイト目を待っている段階
+            mdec->buf[2] = dat;
+            mdec->phase = 1;
+            mdec->btn = mdec->buf[0] & 0x07;    // 下位3ビットを取り出す
+            mdec->x = mdec->buf[1];
+            mdec->y = mdec->buf[2];
+            if ((mdec->buf[0] & 0x10) != 0) {
+                mdec->x |= 0xffffff00;
+            }
+            if ((mdec->buf[0] & 0x20) != 0) {
+                mdec->y |= 0xffffff00;
+            }
+            mdec->y = - mdec->y;
+            return 1;
+        default:    // ここに来ることは無いはず
+            return -1;
+    }
 }

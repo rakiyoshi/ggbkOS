@@ -13,6 +13,12 @@ int dec2asc(char *str, int dec, struct Padding padding)
 {
     int len = 0, len_buf;
     int buf[10];
+    int sign = 0;
+    if (dec < 0) {
+        sign = 1;
+        len++;
+        dec = -dec;
+    }
     while (1) {
         buf[len++] = dec % 10;
         if (dec < 10) break;
@@ -27,6 +33,9 @@ int dec2asc(char *str, int dec, struct Padding padding)
             *(str++) = padding.str;
             padding.length--;
         }
+    }
+    if (sign == 1) {
+        *(str++) = '-';
     }
     while (len) {
         *(str++) = buf[--len] + 0x30;
@@ -105,7 +114,12 @@ void mysprintf(char *str, char *fmt, ...)
     while (*fmt) {
         if (*fmt=='%') {
             fmt++;
-            if (*fmt != 'd' && *fmt != 'D' && *fmt != 'x') {
+            if (*(fmt+1) == 'd' || *(fmt+1) == 'D' || *(fmt+1) == 'x') {
+                // パディング
+                // 02x の場合、 0 がパディング文字、2が出力文字列長
+                padding.str = ' ';
+                padding.length = *(fmt++) - 0x30;
+            } else if (*(fmt+2) == 'd' || *(fmt+2) == 'D' || *(fmt+2) == 'x') {
                 // パディング
                 // 02x の場合、 0 がパディング文字、2が出力文字列長
                 padding.str = *(fmt++);
