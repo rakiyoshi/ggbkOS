@@ -1,15 +1,5 @@
 #include "bootpack.h"
 
-struct MOUSE_DEC {
-    unsigned char buf[3], phase;
-    int x, y, btn;
-};
-
-extern struct FIFO8 keyfifo, mousefifo;
-void enable_mouse(struct MOUSE_DEC *mdec);
-int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
-void init_keyboard(void);
-
 void HariMain(void)
 {
     struct BOOTINFO *binfo = (struct BOOTINFO *) 0x0ff0;
@@ -96,92 +86,5 @@ void HariMain(void)
                 putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);    // マウスを描く
             }
         }
-    }
-}
-
-#define PORT_KEYDAT             0x0060
-#define PORT_KEYSTA             0x0064
-#define PORT_KEYCMD             0x0064
-#define KEYSTA_SEND_NOTREADY    0x02
-#define KEYCMD_WRITE_MODE       0x60
-#define KBC_MODE                0x47
-
-/*
- * キーボードコントローラがデータ送信可能になるまで待つ
- * KBC: KeyBoard Controller
- */
-void wait_KBC_sendready(void)
-{
-    for (;;) {
-        if ((io_in8(PORT_KEYSTA) & KEYSTA_SEND_NOTREADY) == 0) {
-            break;
-        }
-    }
-    return;
-}
-
-/*
- * キーボードコントローラの初期化
- */
-void init_keyboard(void)
-{
-    wait_KBC_sendready();
-    io_out8(PORT_KEYCMD, KEYCMD_WRITE_MODE);
-    wait_KBC_sendready();
-    // http://oswiki.osask.jp/?cmd=read&page=%28AT%29keyboard&word=keyboard
-    io_out8(PORT_KEYDAT, KBC_MODE);
-    return;
-}
-
-#define KEYCMD_SENDTO_MOUSE     0xd4
-#define MOUSECMD_ENABLE         0xf4
-
-/*
- * マウスの有効化
- */
-void enable_mouse(struct MOUSE_DEC *mdec)
-{
-    wait_KBC_sendready();
-    io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
-    wait_KBC_sendready();
-    io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);  // 成功すると ACK(0xfa) が送信される
-    mdec->phase = 0;    // マウスの 0xfa を待っている段階
-    return;
-}
-
-int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat)
-{
-    switch (mdec->phase) {
-        case 0: // マウスの 0xfa を待っている段階
-            if (dat == 0xfa) {
-                mdec->phase = 1;
-            }
-            return 0;
-        case 1: // マウスの1バイト目を待っている段階
-            if ((dat & 0xc8) == 0x08) { // 正しい1バイト目だった場合
-                mdec->buf[0] = dat;
-                mdec->phase++;
-            }
-            return 0;
-        case 2: // マウスの2バイト目を待っている段階
-            mdec->buf[1] = dat;
-            mdec->phase++;
-            return 0;
-        case 3: // マウスの3バイト目を待っている段階
-            mdec->buf[2] = dat;
-            mdec->phase = 1;
-            mdec->btn = mdec->buf[0] & 0x07;    // 下位3ビットを取り出す
-            mdec->x = mdec->buf[1];
-            mdec->y = mdec->buf[2];
-            if ((mdec->buf[0] & 0x10) != 0) {
-                mdec->x |= 0xffffff00;
-            }
-            if ((mdec->buf[0] & 0x20) != 0) {
-                mdec->y |= 0xffffff00;
-            }
-            mdec->y = - mdec->y;
-            return 1;
-        default:    // ここに来ることは無いはず
-            return -1;
     }
 }
