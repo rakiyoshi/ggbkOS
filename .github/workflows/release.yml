@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v2
       - uses: awalsh128/cache-apt-pkgs-action@v1
         with:
-          packages: mtools gcc make nasm
+          packages: mtools gcc-multilib make nasm
           version: 1.0
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
@@ -29,8 +29,8 @@ jobs:
           make build \
             RUNS_ON=github-actions
         working-directory: ./gogobikeos
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: gogobikeos/gogobikeos.img
+      #- name: Release
+      #  uses: softprops/action-gh-release@v1
+      #  if: startsWith(github.ref, 'refs/tags/')
+      #  with:
+      #    files: gogobikeos/gogobikeos.img
