@@ -1,38 +1,26 @@
 name: Release
 
-#on:
-#  push:
-#    tags:
-#      - "day-*"
 on:
-  pull_request:
-  workflow_dispatch:
+  push:
+    tags:
+      - "day-*"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
       MTOOLS_VERSION: 4.0
+      CACHE_PATH: /tmp/docker-img
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - uses: awalsh128/cache-apt-pkgs-action@v1
-        with:
-          packages: build-essential libc6-dev-i386 mtools nasm
-          version: 1.0
-      - name: build
+      - name: Build containers
         run: make
-        working-directory: dockerfiles
-      - name: Setup ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.0.1
+        working-directory: ./dockerfiles
       - name: Build
-        run: |
-          make build
+        run: make build
         working-directory: ./gogobikeos
-      #- name: Release
-      #  uses: softprops/action-gh-release@v1
-      #  if: startsWith(github.ref, 'refs/tags/')
-      #  with:
-      #    files: gogobikeos/gogobikeos.img
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: gogobikeos/gogobikeos.img
