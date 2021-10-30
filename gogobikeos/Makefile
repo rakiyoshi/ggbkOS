@@ -1,5 +1,7 @@
 WORKDIR=/work
 
+RUNS_ON = default
+
 OS_NAME		:= gogobikeos
 ASMHEAD		:= asmhead
 IPL			:= ipl10
@@ -21,11 +23,20 @@ GCC_CONTAINER		:= gcc
 RUBY_CONTAINER		:= ruby
 
 # Shell Commands
-NASM	:= $(DOCKER) run $(DOCKERFLAGS) $(NASM_CONTAINER) nasm
-MFORMAT := $(DOCKER) run $(DOCKERFLAGS) $(MTOOLS_CONTAINER) mformat
-MCOPY 	:= $(DOCKER) run $(DOCKERFLAGS) $(MTOOLS_CONTAINER) mcopy
-GCC 	:= $(DOCKER) run $(DOCKERFLAGS) $(GCC_CONTAINER) gcc
-RUBY	:= $(DOCKER) run $(DOCKERFLAGS) $(RUBY_CONTAINER) ruby
+ifeq (${RUNS_ON}, default)
+	NASM	:= $(DOCKER) run $(DOCKERFLAGS) $(NASM_CONTAINER) nasm
+	MFORMAT := $(DOCKER) run $(DOCKERFLAGS) $(MTOOLS_CONTAINER) mformat
+	MCOPY 	:= $(DOCKER) run $(DOCKERFLAGS) $(MTOOLS_CONTAINER) mcopy
+	GCC 	:= $(DOCKER) run $(DOCKERFLAGS) $(GCC_CONTAINER) gcc
+	RUBY	:= $(DOCKER) run $(DOCKERFLAGS) $(RUBY_CONTAINER) ruby
+else ifeq (${RUNS_ON}, github-actions)
+	NASM	:= nasm
+	MFORMAT := mformat
+	MCOPY 	:= mcopy
+	GCC 	:= gcc
+	RUBY	:= ruby
+endif
+
 MAKE 	:= make -r
 RM 		:= rm -f
 QEMU 	:= qemu-system-i386
@@ -33,7 +44,7 @@ QEMU 	:= qemu-system-i386
 
 # Default
 default:
-	$(MAKE) img
+	$(MAKE) build
 
 
 # File generation
@@ -109,7 +120,7 @@ $(OS_NAME).img: $(IPL).bin $(OS_NAME).sys Makefile
 
 
 # Commands
-img: $(OS_NAME).img
+build: $(OS_NAME).img
 
 run: $(OS_NAME).img
 	$(QEMU) \

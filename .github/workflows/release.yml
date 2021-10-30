@@ -1,0 +1,26 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "day-*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      MTOOLS_VERSION: 4.0
+      CACHE_PATH: /tmp/docker-img
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build containers
+        run: make
+        working-directory: ./dockerfiles
+      - name: Build
+        run: make build
+        working-directory: ./gogobikeos
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: gogobikeos/gogobikeos.img
