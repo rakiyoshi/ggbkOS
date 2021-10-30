@@ -22,6 +22,8 @@ jobs:
           version: 1.0
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.0.1
       - name: Build
         run: |
           make build \
