@@ -44,7 +44,7 @@ QEMU 	:= qemu-system-i386
 
 # Default
 default:
-	$(MAKE) img
+	$(MAKE) build
 
 
 # File generation
