@@ -1,4 +1,4 @@
-FROM gcc:10.3.0
+FROM gcc:10.4.0
 MAINTAINER rakiyoshi
 
 ARG UID
