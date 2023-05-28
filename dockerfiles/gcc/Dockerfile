@@ -1,4 +1,4 @@
-FROM gcc:12.2.0
+FROM gcc:12.3.0
 MAINTAINER rakiyoshi
 
 ARG UID
