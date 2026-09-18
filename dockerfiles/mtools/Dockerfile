@@ -1,4 +1,4 @@
-FROM alpine:3.16.3
+FROM alpine:3.24.2
 MAINTAINER rakiyoshi
 
 ARG UID
