@@ -1,4 +1,4 @@
-FROM ruby:3.1.2
+FROM ruby:4.0.9
 
 ARG UID
 ARG GID
